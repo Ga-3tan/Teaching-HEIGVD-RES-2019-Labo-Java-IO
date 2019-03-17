@@ -21,8 +21,6 @@ public class FileNumberingFilterWriter extends FilterWriter {
   private int lineNumber = 0;
   private boolean temp = true;
   private boolean temp2 = false;
-  private boolean temp3 = false;
-  private String lineBreakType = System.lineSeparator();
 
   public FileNumberingFilterWriter(Writer out) {
     super(out);
@@ -35,26 +33,37 @@ public class FileNumberingFilterWriter extends FilterWriter {
 
   @Override
   public void write(char[] cbuf, int off, int len) throws IOException {
-    for (int i = 0; i < len; i++) {
+    for (int i = off; i < len + off; i++) {
       write(cbuf[i]);
     }
   }
 
   @Override
   public void write(int c) throws IOException {
-    if (lineBreakType == "\r\n") {
-      if (c == '\n') {
+    if (temp == true) {
+      if (temp2 == true) {
         writeLineNumber();
+        temp2 = false;
+        temp = false;
+      } else {
+        if (c != '\n') {
+          writeLineNumber();
+          temp = false;
+        } else {
+          temp2 = true;
+        }
       }
-    } else {
-      if (c == '\n' || c == '\r') {
-        writeLineNumber();
-      }
+    }
+    out.write(c);
+    if (c == '\n' && temp == false) {
+      writeLineNumber();
+    } else if (c == '\r') {
+      temp = true;
     }
   }
   private void writeLineNumber() throws IOException {
-    write(String.valueOf(lineNumber));
-    write("\t");
+    out.write(String.valueOf(++lineNumber));
+    out.write("\t");
   }
 
 }
